@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Browse imported chocolates, snacks, dry fruits, noodles and pantry favourites at New Chocolate House, Dhulabari." />
+    <meta name="theme-color" content="#241612" />
+    <title>New Chocolate House | Product Catalogue</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="styles.css?v=2" />
+    <script src="products.js" defer></script>
+    <script src="app.js?v=2" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="New Chocolate House home">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span><strong>New Chocolate House</strong><small>Dhulabari · Mechinagar</small></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#catalogue">Catalogue</a>
+        <a href="#visit">Visit us</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Imported favourites & local essentials</p>
+          <h1 id="hero-title">A world of treats, right here in Dhulabari.</h1>
+          <p>Explore our current selection of chocolates, candy, dry fruits, biscuits, drinks, noodles and pantry favourites.</p>
+          <a class="primary-link" href="#catalogue">Browse products</a>
+        </div>
+        <img src="assets/shop-banner.png" alt="Selection of products from New Chocolate House" />
+      </section>
+
+      <section class="catalogue" id="catalogue" aria-labelledby="catalogue-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">Our selection</p><h2 id="catalogue-title">Product catalogue</h2></div>
+          <p id="product-count" aria-live="polite"></p>
+        </div>
+
+        <div class="catalogue-tools">
+          <label class="search-box">
+            <span class="sr-only">Search products</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" /></svg>
+            <input id="search-input" type="search" placeholder="Search products, brands or types…" autocomplete="off" />
+          </label>
+          <select id="sort-select" aria-label="Sort products">
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: low first</option>
+            <option value="price-high">Price: high first</option>
+            <option value="name">Name: A–Z</option>
+          </select>
+        </div>
+
+        <div class="category-list" id="category-list" aria-label="Product categories"></div>
+        <div class="product-grid" id="product-grid"></div>
+        <div class="empty-state" id="empty-state" hidden>
+          <h3>No products found</h3>
+          <p>Try a different search or category.</p>
+          <button id="clear-filters" type="button">Show all products</button>
+        </div>
+      </section>
+
+      <section class="visit" id="visit" aria-labelledby="visit-title">
+        <div class="visit-details">
+          <div>
+            <p class="eyebrow">Visit the shop</p>
+            <h2 id="visit-title">New Chocolate House</h2>
+            <p>3 Dhulabari Road, Mechinagar 57207</p>
+            <p><a href="tel:+9779807945780">+977 980-7945780</a></p>
+          </div>
+          <a class="directions-link" href="https://www.google.com/maps/dir/?api=1&destination=26.6624172,88.1003173" 
+          target="_blank" rel="noreferrer">Get directions</a>
+        </div>
+        <div class="map-frame">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3565.5646767153507!2d88.09774237528586!3d26.6624171767973!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39e5b375105be17b%3A0x2854ff79879ad0f!2sNew%20Chocolate%20House!5e0!3m2!1sen!2snp!4v1789530863436!5m2!1sen!2snp"
+            title="New Chocolate House location on Google Maps"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        </div>
+      </section>
+    </main>
+
+    <footer><p>© <span id="current-year"></span> New Chocolate House</p><a href="#top">Back to top</a></footer>
+
+    <dialog class="product-dialog" id="product-dialog">
+      <button class="dialog-close" id="dialog-close" type="button" aria-label="Close product details">×</button>
+      <div id="dialog-content"></div>
+    </dialog>
+  </body>
+</html>
