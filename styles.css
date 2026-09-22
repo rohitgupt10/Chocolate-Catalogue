@@ -140,6 +140,7 @@ footer a { font-weight: 800; }
   select { width: 100%; }
   .product-grid { grid-template-columns: 1fr; gap: 1rem; }
   .product-image { aspect-ratio: 4 / 3; }
+  .product-image img { padding: 0.35rem; }
   .product-info h3 { min-height: 0; }
   .visit-details { align-items: start; flex-direction: column; }
   .map-frame iframe { height: 22rem; }

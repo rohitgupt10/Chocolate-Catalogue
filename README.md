@@ -20,7 +20,7 @@ Set `active: false` to hide an item. Copy an existing product block and give it 
 
 ## WhatsApp orders and product links
 
-Every product has a compact **WhatsApp** link between its price and **View details**, plus an **Order on WhatsApp** link in its details popup, addressed to **+977 9807945780**. It prepares a message with the product name, size, listed price and a link to that product; the customer reviews it and taps Send in WhatsApp. The number must have an active WhatsApp account. To change it, edit `whatsappNumber` in `app.js`, using the country code and number with digits only.
+Every product has a compact **WhatsApp** link between its price and **View details**, plus an **Order on WhatsApp** link in its details popup, addressed to **+977 9769805573**. It prepares a message with the product name, size, listed price and a link to that product; the customer reviews it and taps Send in WhatsApp. The number must have an active WhatsApp account. To change it, edit `whatsappNumber` in `app.js`, using the country code and number with digits only. The shop's general telephone contact is separate and remains unchanged.
 
 Product links use `#product-ID` (for example, `https://your-domain/#product-1`) and open the matching details popup. Keep product IDs stable so shared links continue to work. Links automatically use the current domain and hosting path, including GitHub Pages project subdirectories. No server routes, API keys or database are needed.
 

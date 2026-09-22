@@ -12,7 +12,7 @@
   const dialog = document.querySelector("#product-dialog");
   const dialogContent = document.querySelector("#dialog-content");
   const dialogClose = document.querySelector("#dialog-close");
-  const whatsappNumber = "9779807945780";
+  const whatsappNumber = "9779769805573";
 
   let selectedCategory = "All";
   let returnHash = "#catalogue";
