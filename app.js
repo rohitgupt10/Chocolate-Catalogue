@@ -12,12 +12,55 @@
   const dialog = document.querySelector("#product-dialog");
   const dialogContent = document.querySelector("#dialog-content");
   const dialogClose = document.querySelector("#dialog-close");
+  const whatsappNumber = "9779807945780";
 
   let selectedCategory = "All";
+  let returnHash = "#catalogue";
 
   const hasPrice = (price) => price !== null && price !== undefined && price !== "" && Number.isFinite(Number(price));
   const formatPrice = (price) => hasPrice(price) ? `Rs. ${Number(price).toLocaleString("en-IN")}` : "Ask for price";
   const initials = (name) => name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+
+  function productUrl(product) {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.hash = `product-${product.id}`;
+    return url.href;
+  }
+
+  function createOrderLink(product, compact = false) {
+    const message = [
+      "Hi New Chocolate House, I'd like to order:",
+      product.name,
+      `Size: ${product.weight}`,
+      `Price: ${formatPrice(product.price)}`,
+      `Product: ${productUrl(product)}`,
+      "Please confirm availability and delivery details.",
+    ].join("\n");
+    const link = document.createElement("a");
+    link.className = "order-link";
+    link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = compact ? "WhatsApp" : "Order on WhatsApp";
+    link.setAttribute("aria-label", `Order ${product.name} on WhatsApp`);
+    return link;
+  }
+
+  function selectProduct(product) {
+    if (!window.location.hash.startsWith("#product-")) {
+      returnHash = window.location.hash || "#catalogue";
+    }
+    const hash = `#product-${product.id}`;
+    if (window.location.hash === hash) syncProductFromHash();
+    else window.location.hash = hash;
+  }
+
+  function syncProductFromHash() {
+    const product = products.find((item) => window.location.hash === `#product-${item.id}`);
+    if (product) openProduct(product);
+    else if (dialog.open) dialog.close();
+  }
 
   function createImage(product, showBadge = true) {
     const frame = document.createElement("div");
@@ -90,6 +133,7 @@
       const card = document.createElement("article");
       card.className = "product-card";
       const button = document.createElement("button");
+      button.className = "product-preview";
       button.type = "button";
       button.setAttribute("aria-label", `View details for ${product.name}`);
       button.append(createImage(product));
@@ -103,14 +147,17 @@
       const price = document.createElement("span");
       price.className = "price";
       price.textContent = formatPrice(product.price);
-      const view = document.createElement("span");
+      const view = document.createElement("button");
+      view.type = "button";
       view.className = "view-label";
       view.textContent = "View details";
-      bottom.append(price, view);
-      info.append(name, bottom);
+      view.setAttribute("aria-label", `Details for ${product.name}`);
+      view.addEventListener("click", () => selectProduct(product));
+      bottom.append(price, createOrderLink(product, true), view);
+      info.append(name);
       button.append(info);
-      button.addEventListener("click", () => openProduct(product));
-      card.append(button);
+      button.addEventListener("click", () => selectProduct(product));
+      card.append(button, bottom);
       grid.append(card);
     });
   }
@@ -154,6 +201,7 @@
     eyebrow.className = "eyebrow";
     eyebrow.textContent = `${product.brand} · ${product.origin}`;
     const title = document.createElement("h2");
+    title.id = "product-dialog-title";
     title.textContent = product.name;
     const description = document.createElement("p");
     description.className = "description";
@@ -169,10 +217,14 @@
       detailItem("Category", product.category),
       detailItem("Origin", product.origin)
     );
-    copy.append(eyebrow, title, description, price, details);
+    const orderNote = document.createElement("p");
+    orderNote.className = "order-note";
+    orderNote.textContent = "Your message will be ready in WhatsApp. Tap Send to enquire.";
+    copy.append(eyebrow, title, description, price, details, createOrderLink(product), orderNote);
     layout.append(copy);
     dialogContent.append(layout);
-    dialog.showModal();
+    if (!dialog.open) dialog.showModal();
+    dialog.scrollTop = 0;
   }
 
   searchInput.addEventListener("input", renderProducts);
@@ -189,8 +241,15 @@
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
   });
+  dialog.addEventListener("close", () => {
+    if (!dialog.open && window.location.hash.startsWith("#product-")) {
+      history.replaceState(null, "", returnHash);
+    }
+  });
+  window.addEventListener("hashchange", syncProductFromHash);
 
   document.querySelector("#current-year").textContent = new Date().getFullYear();
   renderCategories();
   renderProducts();
+  syncProductFromHash();
 })();
