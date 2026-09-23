@@ -13,6 +13,20 @@
   const dialogContent = document.querySelector("#dialog-content");
   const dialogClose = document.querySelector("#dialog-close");
   const whatsappNumber = "9779769805573";
+  const mobileLayout = window.matchMedia("(max-width: 560px)");
+  const desktopPlaceholder = searchInput.placeholder;
+  const desktopSortLabels = Array.from(sortSelect.options, (option) => option.textContent);
+
+  function updateControlLabels() {
+    searchInput.placeholder = mobileLayout.matches ? "Search products" : desktopPlaceholder;
+    const mobileSortLabels = ["Featured", "Low price", "High price", "A–Z"];
+    Array.from(sortSelect.options).forEach((option, index) => {
+      option.textContent = mobileLayout.matches ? mobileSortLabels[index] : desktopSortLabels[index];
+    });
+  }
+
+  mobileLayout.addEventListener("change", updateControlLabels);
+  updateControlLabels();
 
   let selectedCategory = "All";
   let returnHash = "#catalogue";
