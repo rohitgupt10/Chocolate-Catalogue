@@ -42,7 +42,7 @@
     link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = compact ? "WhatsApp" : "Order on WhatsApp";
+    link.textContent = compact ? "Order Now" : "Order on WhatsApp";
     link.setAttribute("aria-label", `Order ${product.name} on WhatsApp`);
     return link;
   }
