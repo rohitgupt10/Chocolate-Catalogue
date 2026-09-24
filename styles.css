@@ -99,6 +99,10 @@ select { min-height: 3.25rem; padding: 0 2.75rem 0 1rem; border: 1px solid var(-
 .visit h2 { margin-top: 0.5rem; font-size: clamp(2rem, 4vw, 3rem); }
 .visit-details p:not(.eyebrow) { margin: 0.75rem 0 0; color: rgba(255,255,255,0.7); }
 .visit-details p a { color: #fff; font-weight: 800; text-decoration: none; }
+.social-links { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.25rem; }
+.social-links a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.55rem 1rem; border: 1px solid rgba(239, 191, 101, 0.5); border-radius: 999px; color: var(--gold); font-size: 0.9rem; font-weight: 700; text-decoration: none; }
+.social-links a:hover { color: var(--brown); background: var(--gold); }
+.social-links a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .directions-link { flex: 0 0 auto; margin: 0; }
 .map-frame { padding: 0.65rem; background: #fff; }
 .map-frame iframe { display: block; width: 100%; height: 28rem; border: 0; border-radius: 1.35rem; }
