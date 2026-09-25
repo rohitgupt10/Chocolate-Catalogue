@@ -7,7 +7,7 @@
   --gold: #efbf65;
   --brown: #241612;
   --header: rgba(247, 244, 240, 0.94);
-  --image-frame: #eee8e3;
+  --image-frame: #fff;
   --accent: #8f5130;
   --eyebrow: #a65f38;
   --selected-bg: #241612;
@@ -29,7 +29,6 @@
   --card: #261e1a;
   --line: rgba(247, 238, 230, 0.18);
   --header: rgba(24, 19, 16, 0.96);
-  --image-frame: #342a24;
   --accent: #efbf65;
   --eyebrow: #efbf65;
   --selected-bg: #efbf65;
