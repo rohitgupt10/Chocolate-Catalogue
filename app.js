@@ -42,9 +42,11 @@
   function createOrderLink(product, compact = false) {
     const message = [
       "Hello,",
-      `I'd like to order ${product.name}.`,
-      `${product.weight} · ${formatPrice(product.price)}`,
-      productImageUrl(product),
+      "I'd like to order:",
+      `Product: ${product.name}`,
+      `Size: ${product.weight}`,
+      `Price: ${formatPrice(product.price)}`,
+      `Image: ${productImageUrl(product)}`,
     ].join("\n");
     const link = document.createElement("a");
     link.className = "order-link";
