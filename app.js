@@ -35,21 +35,16 @@
   const formatPrice = (price) => hasPrice(price) ? `Rs. ${Number(price).toLocaleString("en-IN")}` : "Ask for price";
   const initials = (name) => name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 
-  function productUrl(product) {
-    const url = new URL(window.location.href);
-    url.search = "";
-    url.hash = `product-${product.id}`;
-    return url.href;
+  function productImageUrl(product) {
+    return new URL(product.image, window.location.href).href;
   }
 
   function createOrderLink(product, compact = false) {
     const message = [
-      "Hi New Chocolate House, I'd like to order:",
-      product.name,
-      `Size: ${product.weight}`,
-      `Price: ${formatPrice(product.price)}`,
-      `Product: ${productUrl(product)}`,
-      "Please confirm availability and delivery details.",
+      "Hello,",
+      `I'd like to order ${product.name}.`,
+      `${product.weight} · ${formatPrice(product.price)}`,
+      productImageUrl(product),
     ].join("\n");
     const link = document.createElement("a");
     link.className = "order-link";

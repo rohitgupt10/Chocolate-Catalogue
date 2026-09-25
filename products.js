@@ -10,23 +10,6 @@
 
 window.CATALOG_PRODUCTS = [
   {
-    id: 1,
-    name: "Cadbury Dairy Milk Silk Oreo",
-    brand: "Cadbury",
-    category: "Chocolates",
-    origin: "United Kingdom",
-    description:
-      "Silky milk chocolate filled with crunchy Oreo biscuit pieces.",
-    price: 450,
-    weight: "120 g",
-    type: "Oreo milk chocolate",
-    badge: "Bestseller",
-    color: "#6347a7",
-    image: "assets/products/dairy-milk-silk-oreo-transparent.webp",
-    featured: true,
-    active: true,
-  },
-  {
     id: 2,
     name: "AdmKiss Coconut Chocolate",
     brand: "Admkiss",
