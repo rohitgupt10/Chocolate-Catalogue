@@ -59,9 +59,9 @@
       "Hello,",
       "I'd like to order:",
       `Product: ${product.name}`,
-      `Size: ${product.weight}`,
       `Price: ${formatPrice(product.price)}`,
     ];
+    if (product.weight) message.splice(3, 0, `Size: ${product.weight}`);
     const imageUrl = productImageUrl(product);
     if (imageUrl) message.push(`Image: ${imageUrl}`);
     const link = document.createElement("a");
@@ -163,13 +163,9 @@
   function bulkOrderMessage(entries) {
     const lines = ["Hello,", "I'd like to place a bulk order:"];
     entries.forEach(({ product, quantity }, index) => {
-      lines.push(
-        "",
-        `${index + 1}. Product: ${product.name}`,
-        `Size: ${product.weight}`,
-        `Quantity: ${quantity}`,
-        `Price: ${formatPrice(product.price)} each`
-      );
+      lines.push("", `${index + 1}. Product: ${product.name}`);
+      if (product.weight) lines.push(`Size: ${product.weight}`);
+      lines.push(`Quantity: ${quantity}`, `Price: ${formatPrice(product.price)} each`);
       const imageUrl = productImageUrl(product);
       if (imageUrl) lines.push(`Image: ${imageUrl}`);
     });
@@ -204,7 +200,7 @@
       const name = document.createElement("h3");
       name.textContent = product.name;
       const meta = document.createElement("p");
-      meta.textContent = `${product.weight} · ${formatPrice(product.price)} each`;
+      meta.textContent = [product.weight, `${formatPrice(product.price)} each`].filter(Boolean).join(" · ");
 
       const actions = document.createElement("div");
       actions.className = "cart-item-actions";
@@ -398,7 +394,8 @@
     copy.className = "dialog-copy";
     const eyebrow = document.createElement("p");
     eyebrow.className = "eyebrow";
-    eyebrow.textContent = `${product.brand} · ${product.origin}`;
+    eyebrow.textContent = [product.brand, product.origin].filter(Boolean).join(" · ");
+    eyebrow.hidden = !eyebrow.textContent;
     const title = document.createElement("h2");
     title.id = "product-dialog-title";
     title.textContent = product.name;
@@ -410,12 +407,12 @@
     price.textContent = formatPrice(product.price);
     const details = document.createElement("dl");
     details.className = "details-list";
-    details.append(
-      detailItem("Weight / size", product.weight),
-      detailItem("Type", product.type),
-      detailItem("Category", product.category),
-      detailItem("Origin", product.origin)
-    );
+    [
+      ["Weight / size", product.weight],
+      ["Type", product.type],
+      ["Category", product.category],
+      ["Origin", product.origin],
+    ].filter(([, value]) => value).forEach(([label, value]) => details.append(detailItem(label, value)));
     const orderNote = document.createElement("p");
     orderNote.className = "order-note";
     orderNote.textContent = "Your message will be ready in WhatsApp. Tap Send to enquire.";
