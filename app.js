@@ -12,7 +12,20 @@
   const dialog = document.querySelector("#product-dialog");
   const dialogContent = document.querySelector("#dialog-content");
   const dialogClose = document.querySelector("#dialog-close");
+  const cartToggle = document.querySelector("#cart-toggle");
+  const cartCount = document.querySelector("#cart-count");
+  const cartStatus = document.querySelector("#cart-status");
+  const cartDialog = document.querySelector("#cart-dialog");
+  const cartClose = document.querySelector("#cart-close");
+  const cartItems = document.querySelector("#cart-items");
+  const cartEmpty = document.querySelector("#cart-empty");
+  const cartSummary = document.querySelector("#cart-summary");
+  const cartItemTotal = document.querySelector("#cart-item-total");
+  const cartPriceTotal = document.querySelector("#cart-price-total");
+  const cartWhatsapp = document.querySelector("#cart-whatsapp");
+  const cartClear = document.querySelector("#cart-clear");
   const whatsappNumber = "9779769805573";
+  const cartStorageKey = "nch-cart-v1";
   const mobileLayout = window.matchMedia("(max-width: 560px)");
   const desktopPlaceholder = searchInput.placeholder;
   const desktopSortLabels = Array.from(sortSelect.options, (option) => option.textContent);
@@ -36,7 +49,7 @@
   const initials = (name) => name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 
   function productImageUrl(product) {
-    return new URL(product.image, window.location.href).href;
+    return product.image ? new URL(product.image, window.location.href).href : "";
   }
 
   function createOrderLink(product, compact = false) {
@@ -46,16 +59,175 @@
       `Product: ${product.name}`,
       `Size: ${product.weight}`,
       `Price: ${formatPrice(product.price)}`,
-      `Image: ${productImageUrl(product)}`,
-    ].join("\n");
+    ];
+    const imageUrl = productImageUrl(product);
+    if (imageUrl) message.push(`Image: ${imageUrl}`);
     const link = document.createElement("a");
     link.className = "order-link";
-    link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message.join("\n"))}`;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = compact ? "Order Now" : "Order on WhatsApp";
     link.setAttribute("aria-label", `Order ${product.name} on WhatsApp`);
     return link;
+  }
+
+  function loadCart() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(cartStorageKey) || "{}");
+      return new Map(
+        Object.entries(saved)
+          .map(([id, quantity]) => [id, Math.min(99, Math.max(1, Number(quantity) || 1))])
+          .filter(([id]) => products.some((product) => String(product.id) === id))
+      );
+    } catch {
+      return new Map();
+    }
+  }
+
+  const cart = loadCart();
+
+  function saveCart() {
+    try {
+      localStorage.setItem(cartStorageKey, JSON.stringify(Object.fromEntries(cart)));
+    } catch {
+      // The cart still works for this visit when storage is unavailable.
+    }
+  }
+
+  function cartEntries() {
+    return products
+      .filter((product) => cart.has(String(product.id)))
+      .map((product) => ({ product, quantity: cart.get(String(product.id)) }));
+  }
+
+  function addToCart(product) {
+    const id = String(product.id);
+    cart.set(id, Math.min(99, (cart.get(id) || 0) + 1));
+    saveCart();
+    renderCart();
+    cartStatus.textContent = `${product.name} added to cart.`;
+  }
+
+  function setCartQuantity(product, quantity) {
+    const id = String(product.id);
+    if (quantity <= 0) cart.delete(id);
+    else cart.set(id, Math.min(99, quantity));
+    saveCart();
+    renderCart();
+  }
+
+  function createAddToCartButton(product, compact = false) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `add-cart-button${compact ? " compact" : ""}`;
+    button.textContent = "Add to cart";
+    button.setAttribute("aria-label", `Add ${product.name} to cart`);
+    button.addEventListener("click", () => addToCart(product));
+    return button;
+  }
+
+  function createCartThumbnail(product) {
+    const frame = document.createElement("div");
+    frame.className = "cart-item-image";
+    if (product.image) {
+      const image = document.createElement("img");
+      image.src = product.image;
+      image.alt = "";
+      image.addEventListener("error", () => {
+        frame.textContent = initials(product.name);
+      }, { once: true });
+      frame.append(image);
+    } else {
+      frame.textContent = initials(product.name);
+    }
+    return frame;
+  }
+
+  function bulkOrderMessage(entries) {
+    const lines = ["Hello,", "I'd like to place a bulk order:"];
+    entries.forEach(({ product, quantity }, index) => {
+      lines.push(
+        "",
+        `${index + 1}. Product: ${product.name}`,
+        `Size: ${product.weight}`,
+        `Quantity: ${quantity}`,
+        `Price: ${formatPrice(product.price)} each`
+      );
+      const imageUrl = productImageUrl(product);
+      if (imageUrl) lines.push(`Image: ${imageUrl}`);
+    });
+    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(product.price) ? Number(product.price) * quantity : 0), 0);
+    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(product.price));
+    lines.push("", `${hasUnknownPrice ? "Known-item total" : "Estimated total"}: ${formatPrice(total)}`);
+    if (hasUnknownPrice) lines.push("Plus items marked Ask for price.");
+    lines.push("Please confirm availability and final total.");
+    return lines.join("\n");
+  }
+
+  function renderCart() {
+    const entries = cartEntries();
+    const itemCount = entries.reduce((sum, item) => sum + item.quantity, 0);
+    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(product.price) ? Number(product.price) * quantity : 0), 0);
+    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(product.price));
+
+    cartCount.textContent = String(itemCount);
+    cartToggle.setAttribute("aria-label", `Open cart, ${itemCount} item${itemCount === 1 ? "" : "s"}`);
+    cartItems.replaceChildren();
+    cartItems.hidden = entries.length === 0;
+    cartEmpty.hidden = entries.length !== 0;
+    cartSummary.hidden = entries.length === 0;
+
+    entries.forEach(({ product, quantity }) => {
+      const item = document.createElement("article");
+      item.className = "cart-item";
+      item.append(createCartThumbnail(product));
+
+      const copy = document.createElement("div");
+      copy.className = "cart-item-copy";
+      const name = document.createElement("h3");
+      name.textContent = product.name;
+      const meta = document.createElement("p");
+      meta.textContent = `${product.weight} · ${formatPrice(product.price)} each`;
+
+      const actions = document.createElement("div");
+      actions.className = "cart-item-actions";
+      const quantityControls = document.createElement("div");
+      quantityControls.className = "quantity-controls";
+      const decrease = document.createElement("button");
+      decrease.type = "button";
+      decrease.textContent = "−";
+      decrease.setAttribute("aria-label", `Decrease quantity of ${product.name}`);
+      decrease.addEventListener("click", () => setCartQuantity(product, quantity - 1));
+      const quantityText = document.createElement("span");
+      quantityText.textContent = String(quantity);
+      quantityText.setAttribute("aria-label", `Quantity ${quantity}`);
+      const increase = document.createElement("button");
+      increase.type = "button";
+      increase.textContent = "+";
+      increase.setAttribute("aria-label", `Increase quantity of ${product.name}`);
+      increase.addEventListener("click", () => setCartQuantity(product, quantity + 1));
+      quantityControls.append(decrease, quantityText, increase);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "cart-remove";
+      remove.textContent = "Remove";
+      remove.setAttribute("aria-label", `Remove ${product.name} from cart`);
+      remove.addEventListener("click", () => setCartQuantity(product, 0));
+      actions.append(quantityControls, remove);
+      copy.append(name, meta, actions);
+      item.append(copy);
+      cartItems.append(item);
+    });
+
+    if (entries.length) {
+      cartItemTotal.textContent = String(itemCount);
+      cartPriceTotal.textContent = `${formatPrice(total)}${hasUnknownPrice ? " + ask-price items" : ""}`;
+      cartWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(bulkOrderMessage(entries))}`;
+    } else {
+      cartWhatsapp.removeAttribute("href");
+    }
   }
 
   function selectProduct(product) {
@@ -164,7 +336,7 @@
       view.textContent = "View details";
       view.setAttribute("aria-label", `Details for ${product.name}`);
       view.addEventListener("click", () => selectProduct(product));
-      bottom.append(price, createOrderLink(product, true), view);
+      bottom.append(price, createAddToCartButton(product, true), view);
       info.append(name);
       button.append(info);
       button.addEventListener("click", () => selectProduct(product));
@@ -231,7 +403,10 @@
     const orderNote = document.createElement("p");
     orderNote.className = "order-note";
     orderNote.textContent = "Your message will be ready in WhatsApp. Tap Send to enquire.";
-    copy.append(eyebrow, title, description, price, details, createOrderLink(product), orderNote);
+    const actions = document.createElement("div");
+    actions.className = "dialog-actions";
+    actions.append(createAddToCartButton(product), createOrderLink(product));
+    copy.append(eyebrow, title, description, price, details, actions, orderNote);
     layout.append(copy);
     dialogContent.append(layout);
     if (!dialog.open) dialog.showModal();
@@ -257,10 +432,25 @@
       history.replaceState(null, "", returnHash);
     }
   });
+  cartToggle.addEventListener("click", () => {
+    renderCart();
+    if (!cartDialog.open) cartDialog.showModal();
+  });
+  cartClose.addEventListener("click", () => cartDialog.close());
+  cartDialog.addEventListener("click", (event) => {
+    if (event.target === cartDialog) cartDialog.close();
+  });
+  cartClear.addEventListener("click", () => {
+    cart.clear();
+    saveCart();
+    renderCart();
+    cartStatus.textContent = "Cart cleared.";
+  });
   window.addEventListener("hashchange", syncProductFromHash);
 
   document.querySelector("#current-year").textContent = new Date().getFullYear();
   renderCategories();
   renderProducts();
+  renderCart();
   syncProductFromHash();
 })();

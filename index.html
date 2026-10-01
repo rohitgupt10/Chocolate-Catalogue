@@ -8,9 +8,9 @@
     <title>New Chocolate House | Product Catalogue</title>
     <link rel="icon" type="image/png" href="assets/logo.png?v=since-2011-2" />
     <script src="theme.js?v=1"></script>
-    <link rel="stylesheet" href="styles.css?v=white-product-frames-1" />
+    <link rel="stylesheet" href="styles.css?v=cart-1" />
     <script src="products.js?v=dry-fruits-3" defer></script>
-    <script src="app.js?v=short-whatsapp-image-2" defer></script>
+    <script src="app.js?v=cart-1" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -93,11 +93,43 @@
       </section>
     </main>
 
+    <button class="cart-toggle" id="cart-toggle" type="button" aria-controls="cart-dialog" aria-label="Open cart, 0 items">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Zm3 0V6a3 3 0 0 1 6 0v2" /></svg>
+      <span>Cart</span>
+      <strong id="cart-count" aria-hidden="true">0</strong>
+    </button>
+
+    <div class="sr-only" id="cart-status" aria-live="polite"></div>
+
     <footer><p>© <span id="current-year"></span> New Chocolate House</p><a href="#top">Back to top</a></footer>
 
     <dialog class="product-dialog" id="product-dialog" aria-labelledby="product-dialog-title">
       <button class="dialog-close" id="dialog-close" type="button" aria-label="Close product details">×</button>
       <div id="dialog-content"></div>
+    </dialog>
+
+    <dialog class="cart-dialog" id="cart-dialog" aria-labelledby="cart-title">
+      <div class="cart-panel">
+        <div class="cart-header">
+          <div>
+            <p class="eyebrow">Your basket</p>
+            <h2 id="cart-title">Shopping cart</h2>
+          </div>
+          <button class="cart-close" id="cart-close" type="button" aria-label="Close cart">×</button>
+        </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-empty" id="cart-empty">
+          <h3>Your cart is empty</h3>
+          <p>Add products from the catalogue to prepare a bulk WhatsApp order.</p>
+        </div>
+        <div class="cart-summary" id="cart-summary" hidden>
+          <div><span>Total items</span><strong id="cart-item-total">0</strong></div>
+          <div><span>Estimated total</span><strong id="cart-price-total">Rs. 0</strong></div>
+          <a class="cart-whatsapp" id="cart-whatsapp" target="_blank" rel="noopener noreferrer">Order cart on WhatsApp</a>
+          <button class="cart-clear" id="cart-clear" type="button">Clear cart</button>
+          <p>Availability and final total will be confirmed on WhatsApp.</p>
+        </div>
+      </div>
     </dialog>
   </body>
 </html>
