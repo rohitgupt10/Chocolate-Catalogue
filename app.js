@@ -29,6 +29,8 @@
   const mobileLayout = window.matchMedia("(max-width: 560px)");
   const desktopPlaceholder = searchInput.placeholder;
   const desktopSortLabels = Array.from(sortSelect.options, (option) => option.textContent);
+  let cartToastTimer;
+  let cartToastHideTimer;
 
   function updateControlLabels() {
     searchInput.placeholder = mobileLayout.matches ? "Search products" : desktopPlaceholder;
@@ -106,7 +108,21 @@
     cart.set(id, Math.min(99, (cart.get(id) || 0) + 1));
     saveCart();
     renderCart();
-    cartStatus.textContent = `${product.name} added to cart.`;
+    showCartToast(`${product.name} added · ${cart.get(id)} in cart`);
+  }
+
+  function showCartToast(message) {
+    clearTimeout(cartToastTimer);
+    clearTimeout(cartToastHideTimer);
+    cartStatus.textContent = message;
+    cartStatus.hidden = false;
+    requestAnimationFrame(() => cartStatus.classList.add("is-visible"));
+    cartToastTimer = setTimeout(() => {
+      cartStatus.classList.remove("is-visible");
+      cartToastHideTimer = setTimeout(() => {
+        cartStatus.hidden = true;
+      }, 220);
+    }, 2200);
   }
 
   function setCartQuantity(product, quantity) {
@@ -444,7 +460,7 @@
     cart.clear();
     saveCart();
     renderCart();
-    cartStatus.textContent = "Cart cleared.";
+    showCartToast("Cart cleared.");
   });
   window.addEventListener("hashchange", syncProductFromHash);
 
