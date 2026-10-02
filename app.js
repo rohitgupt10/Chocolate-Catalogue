@@ -24,8 +24,13 @@
   const cartPriceTotal = document.querySelector("#cart-price-total");
   const cartWhatsapp = document.querySelector("#cart-whatsapp");
   const cartClear = document.querySelector("#cart-clear");
+  const retailTab = document.querySelector("#retail-tab");
+  const wholesaleTab = document.querySelector("#wholesale-tab");
+  const wholesaleNotice = document.querySelector("#wholesale-notice");
   const whatsappNumber = "9779769805573";
-  const cartStorageKey = "nch-cart-v1";
+  const retailCartStorageKey = "nch-cart-v1";
+  const wholesaleCartStorageKey = "nch-cart-wholesale-v1";
+  const pricingModeStorageKey = "nch-pricing-mode-v1";
   const mobileLayout = window.matchMedia("(max-width: 560px)");
   const desktopPlaceholder = searchInput.placeholder;
   const desktopSortLabels = Array.from(sortSelect.options, (option) => option.textContent);
@@ -56,10 +61,53 @@
 
   let selectedCategory = "All";
   let returnHash = "#catalogue";
+  let pricingMode = loadPricingMode();
 
   const hasPrice = (price) => price !== null && price !== undefined && price !== "" && Number.isFinite(Number(price));
   const formatPrice = (price) => hasPrice(price) ? `Rs. ${Number(price).toLocaleString("en-IN")}` : "Ask for price";
   const initials = (name) => name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+
+  function loadPricingMode() {
+    try {
+      return localStorage.getItem(pricingModeStorageKey) === "wholesale" ? "wholesale" : "retail";
+    } catch {
+      return "retail";
+    }
+  }
+
+  function isWholesale() {
+    return pricingMode === "wholesale";
+  }
+
+  function currentCartStorageKey() {
+    return isWholesale() ? wholesaleCartStorageKey : retailCartStorageKey;
+  }
+
+  function productPrice(product) {
+    return isWholesale() ? product.wholesalePrice : product.price;
+  }
+
+  function productWeight(product) {
+    return isWholesale() ? (product.wholesaleWeight || product.weight) : product.weight;
+  }
+
+  function minimumQuantity(product) {
+    if (!isWholesale()) return 1;
+    if (Number.isFinite(Number(product.wholesaleMinQuantity))) return Number(product.wholesaleMinQuantity);
+    return product.wholesaleWeight === "1 kg" ? 1 : 10;
+  }
+
+  function wholesaleMinimumLabel(product) {
+    if (!isWholesale()) return "";
+    const minimum = minimumQuantity(product);
+    if (product.wholesaleWeight === "1 kg") return "Minimum 1 kg";
+    if ((product.wholesaleWeight || "").toLowerCase().includes("bottle")) return `Minimum ${minimum} bottles`;
+    return `Minimum ${minimum} packets`;
+  }
+
+  function isInStock(product) {
+    return product.inStock !== false;
+  }
 
   function productImageUrl(product) {
     return product.image ? new URL(product.image, window.location.href).href : "";
@@ -68,11 +116,14 @@
   function createOrderLink(product, compact = false) {
     const message = [
       "Hello,",
-      "I'd like to order:",
+      isWholesale() ? "I'd like to place a wholesale order:" : "I'd like to order:",
       `Product: ${product.name}`,
-      `Price: ${formatPrice(product.price)}`,
+      `Price: ${formatPrice(productPrice(product))}`,
     ];
-    if (product.weight) message.splice(3, 0, `Size: ${product.weight}`);
+    if (productWeight(product)) message.splice(3, 0, `Size: ${productWeight(product)}`);
+    if (isWholesale()) {
+      message.splice(message.length - 1, 0, wholesaleMinimumLabel(product), `Quantity: ${minimumQuantity(product)}`);
+    }
     const imageUrl = productImageUrl(product);
     if (imageUrl) message.push(`Image: ${imageUrl}`);
     const link = document.createElement("a");
@@ -87,22 +138,26 @@
 
   function loadCart() {
     try {
-      const saved = JSON.parse(localStorage.getItem(cartStorageKey) || "{}");
+      const saved = JSON.parse(localStorage.getItem(currentCartStorageKey()) || "{}");
       return new Map(
         Object.entries(saved)
-          .map(([id, quantity]) => [id, Math.min(99, Math.max(1, Number(quantity) || 1))])
-          .filter(([id]) => products.some((product) => String(product.id) === id))
+          .map(([id, quantity]) => {
+            const product = products.find((item) => String(item.id) === id);
+            const minimum = product ? minimumQuantity(product) : 1;
+            return [id, Math.min(99, Math.max(minimum, Number(quantity) || minimum))];
+          })
+          .filter(([id]) => products.some((product) => String(product.id) === id && isInStock(product)))
       );
     } catch {
       return new Map();
     }
   }
 
-  const cart = loadCart();
+  let cart = loadCart();
 
   function saveCart() {
     try {
-      localStorage.setItem(cartStorageKey, JSON.stringify(Object.fromEntries(cart)));
+      localStorage.setItem(currentCartStorageKey(), JSON.stringify(Object.fromEntries(cart)));
     } catch {
       // The cart still works for this visit when storage is unavailable.
     }
@@ -110,13 +165,15 @@
 
   function cartEntries() {
     return products
-      .filter((product) => cart.has(String(product.id)))
+      .filter((product) => isInStock(product) && cart.has(String(product.id)))
       .map((product) => ({ product, quantity: cart.get(String(product.id)) }));
   }
 
   function addToCart(product) {
+    if (!isInStock(product)) return;
     const id = String(product.id);
-    cart.set(id, Math.min(99, (cart.get(id) || 0) + 1));
+    const minimum = minimumQuantity(product);
+    cart.set(id, Math.min(99, cart.has(id) ? cart.get(id) + 1 : minimum));
     saveCart();
     renderCart();
     showCartToast(`${product.name} added · ${cart.get(id)} in cart`);
@@ -139,7 +196,7 @@
   function setCartQuantity(product, quantity) {
     const id = String(product.id);
     if (quantity <= 0) cart.delete(id);
-    else cart.set(id, Math.min(99, quantity));
+    else cart.set(id, Math.min(99, Math.max(minimumQuantity(product), quantity)));
     saveCart();
     renderCart();
   }
@@ -148,8 +205,18 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = `add-cart-button${compact ? " compact" : ""}`;
-    button.textContent = "Add to cart";
-    button.setAttribute("aria-label", `Add ${product.name} to cart`);
+    if (!isInStock(product)) {
+      button.classList.add("out-of-stock");
+      button.textContent = "Out of stock";
+      button.disabled = true;
+      button.setAttribute("aria-label", `${product.name} is out of stock`);
+      return button;
+    }
+    const minimum = minimumQuantity(product);
+    button.textContent = isWholesale() && minimum > 1
+      ? (compact ? `Add ${minimum}` : `Add ${minimum} to cart`)
+      : "Add to cart";
+    button.setAttribute("aria-label", `Add ${minimum > 1 ? `${minimum} of ` : ""}${product.name} to cart`);
     button.addEventListener("click", () => addToCart(product));
     return button;
   }
@@ -172,19 +239,20 @@
   }
 
   function cartOrderMessage(entries) {
-    const lines = ["Hello,", "I'd like to order:"];
+    const lines = ["Hello,", isWholesale() ? "I'd like to place a wholesale order:" : "I'd like to order:"];
     entries.forEach(({ product, quantity }, index) => {
       lines.push("", `${index + 1}. Product: ${product.name}`);
-      if (product.weight) lines.push(`Size: ${product.weight}`);
+      if (productWeight(product)) lines.push(`Size: ${productWeight(product)}`);
+      if (isWholesale()) lines.push(wholesaleMinimumLabel(product));
       lines.push(
         `Quantity: ${quantity}`,
-        `Price: ${formatPrice(product.price)}${hasPrice(product.price) ? " each" : ""}`,
+        `Price: ${formatPrice(productPrice(product))}${hasPrice(productPrice(product)) ? " each" : ""}`,
       );
       const imageUrl = productImageUrl(product);
       if (imageUrl) lines.push(`Image: ${imageUrl}`);
     });
-    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(product.price) ? Number(product.price) * quantity : 0), 0);
-    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(product.price));
+    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(productPrice(product)) ? Number(productPrice(product)) * quantity : 0), 0);
+    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(productPrice(product)));
     lines.push("", `${hasUnknownPrice ? "Known-item total" : "Estimated total"}: ${formatPrice(total)}`);
     if (hasUnknownPrice) lines.push("Plus items marked Ask for price.");
     lines.push("Please confirm availability and final total.");
@@ -194,8 +262,8 @@
   function renderCart() {
     const entries = cartEntries();
     const itemCount = entries.reduce((sum, item) => sum + item.quantity, 0);
-    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(product.price) ? Number(product.price) * quantity : 0), 0);
-    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(product.price));
+    const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(productPrice(product)) ? Number(productPrice(product)) * quantity : 0), 0);
+    const hasUnknownPrice = entries.some(({ product }) => !hasPrice(productPrice(product)));
 
     cartCount.textContent = String(itemCount);
     cartToggle.setAttribute("aria-label", `Open cart, ${itemCount} item${itemCount === 1 ? "" : "s"}`);
@@ -214,7 +282,11 @@
       const name = document.createElement("h3");
       name.textContent = product.name;
       const meta = document.createElement("p");
-      meta.textContent = [product.weight, `${formatPrice(product.price)} each`].filter(Boolean).join(" · ");
+      meta.textContent = [
+        productWeight(product),
+        `${formatPrice(productPrice(product))}${hasPrice(productPrice(product)) ? " each" : ""}`,
+        isWholesale() ? wholesaleMinimumLabel(product) : "",
+      ].filter(Boolean).join(" · ");
 
       const actions = document.createElement("div");
       actions.className = "cart-item-actions";
@@ -224,6 +296,7 @@
       decrease.type = "button";
       decrease.textContent = "−";
       decrease.setAttribute("aria-label", `Decrease quantity of ${product.name}`);
+      decrease.disabled = quantity <= minimumQuantity(product);
       decrease.addEventListener("click", () => setCartQuantity(product, quantity - 1));
       const quantityText = document.createElement("span");
       quantityText.textContent = String(quantity);
@@ -250,6 +323,7 @@
     if (entries.length) {
       cartItemTotal.textContent = String(itemCount);
       cartPriceTotal.textContent = `${formatPrice(total)}${hasUnknownPrice ? " + ask-price items" : ""}`;
+      cartWhatsapp.textContent = isWholesale() ? "Order wholesale cart on WhatsApp" : "Order cart on WhatsApp";
       cartWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(cartOrderMessage(entries))}`;
     } else {
       cartWhatsapp.removeAttribute("href");
@@ -316,14 +390,14 @@
 
     return visible.sort((a, b) => {
       if (sortSelect.value === "price-low") {
-        if (!hasPrice(a.price)) return 1;
-        if (!hasPrice(b.price)) return -1;
-        return Number(a.price) - Number(b.price);
+        if (!hasPrice(productPrice(a))) return 1;
+        if (!hasPrice(productPrice(b))) return -1;
+        return Number(productPrice(a)) - Number(productPrice(b));
       }
       if (sortSelect.value === "price-high") {
-        if (!hasPrice(a.price)) return 1;
-        if (!hasPrice(b.price)) return -1;
-        return Number(b.price) - Number(a.price);
+        if (!hasPrice(productPrice(a))) return 1;
+        if (!hasPrice(productPrice(b))) return -1;
+        return Number(productPrice(b)) - Number(productPrice(a));
       }
       if (sortSelect.value === "name") return a.name.localeCompare(b.name);
       const categoryDifference = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
@@ -353,11 +427,15 @@
       info.className = "product-info";
       const name = document.createElement("h3");
       name.textContent = product.name;
+      const modeMeta = document.createElement("p");
+      modeMeta.className = "product-mode-meta";
+      modeMeta.textContent = [productWeight(product), wholesaleMinimumLabel(product)].filter(Boolean).join(" · ");
+      modeMeta.hidden = !isWholesale();
       const bottom = document.createElement("div");
       bottom.className = "product-bottom";
       const price = document.createElement("span");
       price.className = "price";
-      price.textContent = formatPrice(product.price);
+      price.textContent = formatPrice(productPrice(product));
       const view = document.createElement("button");
       view.type = "button";
       view.className = "view-label";
@@ -365,7 +443,7 @@
       view.setAttribute("aria-label", `Details for ${product.name}`);
       view.addEventListener("click", () => selectProduct(product));
       bottom.append(price, createAddToCartButton(product, true), view);
-      info.append(name);
+      info.append(name, modeMeta);
       button.append(info);
       button.addEventListener("click", () => selectProduct(product));
       card.append(button, bottom);
@@ -389,6 +467,25 @@
       });
       categoryList.append(button);
     });
+  }
+
+  function setPricingMode(mode, announce = true) {
+    pricingMode = mode === "wholesale" ? "wholesale" : "retail";
+    try {
+      localStorage.setItem(pricingModeStorageKey, pricingMode);
+    } catch {
+      // The selected mode still works for this visit when storage is unavailable.
+    }
+    cart = loadCart();
+    retailTab.setAttribute("aria-pressed", String(!isWholesale()));
+    wholesaleTab.setAttribute("aria-pressed", String(isWholesale()));
+    wholesaleNotice.hidden = !isWholesale();
+    document.documentElement.dataset.pricingMode = pricingMode;
+    cartWhatsapp.textContent = isWholesale() ? "Order wholesale cart on WhatsApp" : "Order cart on WhatsApp";
+    renderProducts();
+    renderCart();
+    if (dialog.open) syncProductFromHash();
+    if (announce) showCartToast(`${isWholesale() ? "Wholesale" : "Retail"} prices shown.`);
   }
 
   function detailItem(label, value) {
@@ -421,11 +518,12 @@
     description.textContent = product.description;
     const price = document.createElement("p");
     price.className = "dialog-price";
-    price.textContent = formatPrice(product.price);
+    price.textContent = formatPrice(productPrice(product));
     const details = document.createElement("dl");
     details.className = "details-list";
     [
-      ["Weight / size", product.weight],
+      ["Weight / size", productWeight(product)],
+      ["Wholesale minimum", wholesaleMinimumLabel(product)],
       ["Type", product.type],
       ["Category", product.category],
       ["Origin", product.origin],
@@ -435,7 +533,8 @@
     orderNote.textContent = "Your message will be ready in WhatsApp. Tap Send to enquire.";
     const actions = document.createElement("div");
     actions.className = "dialog-actions";
-    actions.append(createAddToCartButton(product), createOrderLink(product));
+    actions.append(createAddToCartButton(product));
+    if (isInStock(product)) actions.append(createOrderLink(product));
     copy.append(eyebrow, title, description, price, details, actions, orderNote);
     layout.append(copy);
     dialogContent.append(layout);
@@ -445,6 +544,8 @@
 
   searchInput.addEventListener("input", renderProducts);
   sortSelect.addEventListener("change", renderProducts);
+  retailTab.addEventListener("click", () => setPricingMode("retail"));
+  wholesaleTab.addEventListener("click", () => setPricingMode("wholesale"));
   clearFilters.addEventListener("click", () => {
     searchInput.value = "";
     selectedCategory = "All";
@@ -480,7 +581,6 @@
 
   document.querySelector("#current-year").textContent = new Date().getFullYear();
   renderCategories();
-  renderProducts();
-  renderCart();
+  setPricingMode(pricingMode, false);
   syncProductFromHash();
 })();
