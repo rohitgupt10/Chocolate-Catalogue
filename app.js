@@ -160,12 +160,15 @@
     return frame;
   }
 
-  function bulkOrderMessage(entries) {
-    const lines = ["Hello,", "I'd like to place a bulk order:"];
+  function cartOrderMessage(entries) {
+    const lines = ["Hello,", "I'd like to order:"];
     entries.forEach(({ product, quantity }, index) => {
       lines.push("", `${index + 1}. Product: ${product.name}`);
       if (product.weight) lines.push(`Size: ${product.weight}`);
-      lines.push(`Quantity: ${quantity}`, `Price: ${formatPrice(product.price)} each`);
+      lines.push(
+        `Quantity: ${quantity}`,
+        `Price: ${formatPrice(product.price)}${hasPrice(product.price) ? " each" : ""}`,
+      );
       const imageUrl = productImageUrl(product);
       if (imageUrl) lines.push(`Image: ${imageUrl}`);
     });
@@ -236,7 +239,7 @@
     if (entries.length) {
       cartItemTotal.textContent = String(itemCount);
       cartPriceTotal.textContent = `${formatPrice(total)}${hasUnknownPrice ? " + ask-price items" : ""}`;
-      cartWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(bulkOrderMessage(entries))}`;
+      cartWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(cartOrderMessage(entries))}`;
     } else {
       cartWhatsapp.removeAttribute("href");
     }
