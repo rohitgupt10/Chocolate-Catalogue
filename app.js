@@ -29,6 +29,17 @@
   const mobileLayout = window.matchMedia("(max-width: 560px)");
   const desktopPlaceholder = searchInput.placeholder;
   const desktopSortLabels = Array.from(sortSelect.options, (option) => option.textContent);
+  const categoryOrder = [
+    "Chocolates",
+    "Candy",
+    "Jelly",
+    "Dry fruits",
+    "Noodles",
+    "Chips & snacks",
+    "Biscuits",
+    "Pantry",
+    "Beverages",
+  ];
   let cartToastTimer;
   let cartToastHideTimer;
 
@@ -315,7 +326,9 @@
         return Number(b.price) - Number(a.price);
       }
       if (sortSelect.value === "name") return a.name.localeCompare(b.name);
-      return Number(Boolean(b.image)) - Number(Boolean(a.image))
+      const categoryDifference = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+      return (selectedCategory === "All" ? categoryDifference : 0)
+        || Number(Boolean(b.image)) - Number(Boolean(a.image))
         || Number(b.featured) - Number(a.featured)
         || a.id - b.id;
     });
@@ -361,7 +374,8 @@
   }
 
   function renderCategories() {
-    const categories = ["All", ...new Set(products.map((product) => product.category))];
+    const availableCategories = new Set(products.map((product) => product.category));
+    const categories = ["All", ...categoryOrder.filter((category) => availableCategories.has(category))];
     categories.forEach((category) => {
       const button = document.createElement("button");
       button.type = "button";
