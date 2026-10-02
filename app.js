@@ -38,12 +38,12 @@
     "Chocolates",
     "Candy",
     "Jelly",
-    "Dry fruits",
     "Noodles",
     "Chips & snacks",
     "Biscuits",
     "Pantry",
     "Beverages",
+    "Dry fruits",
   ];
   let cartToastTimer;
   let cartToastHideTimer;

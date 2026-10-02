@@ -230,6 +230,7 @@ footer a { font-weight: 800; }
   .brand > span { min-width: 0; }
   nav a { display: none; }
   .pricing-tab { min-height: 2.15rem; padding-inline: 0.55rem; font-size: 0.7rem; }
+  .category-list { flex-wrap: wrap; overflow-x: visible; }
   .brand strong { font-size: 0.95rem; white-space: normal; }
   main, footer { width: min(100% - 1rem, 1180px); }
   .hero { min-height: 18rem; border-radius: 1.5rem; }
