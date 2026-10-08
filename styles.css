@@ -58,7 +58,9 @@ a { color: inherit; }
   border-bottom: 1px solid var(--line);
   background: var(--header);
   backdrop-filter: blur(16px);
+  transition: transform 220ms ease;
 }
+.site-header.is-hidden { transform: translateY(-105%); }
 
 .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; min-width: 0; }
 .brand-mark { width: 2.75rem; height: 2.75rem; flex: 0 0 auto; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1px rgba(36, 22, 18, 0.12); }
@@ -232,9 +234,9 @@ footer a { font-weight: 800; }
   .brand-mark { width: 2.75rem; height: 2.75rem; }
   .brand > span { min-width: 0; }
   nav a { display: none; }
-  nav a.visit-nav-link { display: inline-flex; align-items: center; min-height: 1.95rem; padding: 0.3rem 0.38rem; font-size: 0.68rem; }
+  nav a.visit-nav-link { display: inline-flex; align-items: center; min-height: 2.3rem; padding: 0.5rem 0.7rem; font-size: 0.85rem; }
   nav { width: 100%; justify-content: flex-end; gap: 0.12rem; }
-  .pricing-tab { min-height: 1.9rem; padding: 0.3rem 0.34rem; font-size: 0.65rem; }
+  .pricing-tab { min-height: 2.3rem; padding: 0.42rem 0.62rem; font-size: 0.75rem; }
   .theme-toggle { width: 1.95rem; height: 1.95rem; }
   .category-list { flex-wrap: wrap; overflow-x: visible; }
   .brand strong { font-size: 0.95rem; white-space: normal; }
@@ -273,13 +275,14 @@ footer a { font-weight: 800; }
   .brand strong { font-size: 0.85rem; }
   .brand small { font-size: 0.58rem; letter-spacing: 0.06em; }
   nav { gap: 0.1rem; }
-  nav a.visit-nav-link { padding-inline: 0.3rem; font-size: 0.64rem; }
-  .pricing-tab { padding-inline: 0.28rem; font-size: 0.61rem; }
+  nav a.visit-nav-link { padding-inline: 0.62rem; font-size: 0.82rem; }
+  .pricing-tab { padding-inline: 0.52rem; font-size: 0.72rem; }
   .catalogue-tools { grid-template-columns: minmax(0, 1fr); }
   #sort-select { padding-inline: 1rem 2rem; font-size: 1rem; background-position: right 1rem center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root { scroll-behavior: auto; }
+  .site-header { transition-duration: 0.01ms; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
