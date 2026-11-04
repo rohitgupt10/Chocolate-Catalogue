@@ -23,9 +23,13 @@ The Lavello original photo shows EXP 07.04.2026. Listing 66 remains marked out o
 
 ## Image processing
 
-Tool: built-in imagegen, edit mode with transparent background enabled. HEIC originals were decoded into JPEG previews for tool compatibility. Generated images are compressed as WebP with their alpha channel preserved. Final catalogue assets are stored in `assets/products/`, using the asset stem above followed by `-transparent.webp`.
+Current version: direct photo editing, explicitly chosen by the owner to avoid AI-redrawn packaging. The source is decoded directly from the original HEIC photograph. Traced silhouette masks and boundary segmentation remove the surroundings without synthesizing product pixels. The original photographic perspective, texture, reflections, labels, creases and surface shading are retained. Upside-down jars and the sideways Uttam packet are rotated in the image plane. Each cutout has a subtle contact shadow and a transparent canvas, compressed as WebP. Current catalogue assets use the asset stem above followed by `-photo-v2.webp`. Retail prices, wholesale prices, sizes and stock status are unchanged by this image revision.
 
-Shared prompt template:
+The earlier `-transparent.webp` assets remain available for rollback but are no longer used by listings 62–73. An imagegen preservation sample was rejected because it still changed label details. The earlier AI processing prompts below are historical and do not describe the current photo cutouts.
+
+The current traced masks and photo-processing recipe are retained in `image-processing/prepare_product_photos.py`. It reads the local owner-supplied HEIC files and requires Pillow, pillow-heif, NumPy and OpenCV. It is an offline preparation tool; the published catalogue has no Python or image-processing dependencies.
+
+Earlier AI prompt template (superseded):
 
 > Edit target: provided product photograph. Produce a clean e-commerce product cutout of [subject instruction below]. Remove the shop counter and all surroundings completely, on a genuinely transparent background with alpha, no white background and no checkerboard drawn. Preserve original product shape, proportions, colours, printed packaging, logo, text and visible details faithfully; do not redesign packaging or invent any text. Centre product fully visible with small even margins, no cropping, no added objects, no cast shadow. Output a single product asset.
 
