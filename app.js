@@ -68,6 +68,8 @@
   const initials = (name) => name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 
   function loadPricingMode() {
+    const linkedMode = new URL(window.location.href).searchParams.get("pricing");
+    if (linkedMode === "retail" || linkedMode === "wholesale") return linkedMode;
     try {
       return localStorage.getItem(pricingModeStorageKey) === "wholesale" ? "wholesale" : "retail";
     } catch {
@@ -113,6 +115,13 @@
     return product.image ? new URL(product.image, window.location.href).href : "";
   }
 
+  function productLink(product) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("pricing", pricingMode);
+    url.hash = `product-${product.id}`;
+    return url.href;
+  }
+
   function createOrderLink(product, compact = false) {
     const message = [
       "Hello,",
@@ -126,6 +135,7 @@
     }
     const imageUrl = productImageUrl(product);
     if (imageUrl) message.push(`Image: ${imageUrl}`);
+    message.push(`Product link: ${productLink(product)}`);
     const link = document.createElement("a");
     link.className = "order-link";
     link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message.join("\n"))}`;
@@ -250,6 +260,7 @@
       );
       const imageUrl = productImageUrl(product);
       if (imageUrl) lines.push(`Image: ${imageUrl}`);
+      lines.push(`Product link: ${productLink(product)}`);
     });
     const total = entries.reduce((sum, { product, quantity }) => sum + (hasPrice(productPrice(product)) ? Number(productPrice(product)) * quantity : 0), 0);
     const hasUnknownPrice = entries.some(({ product }) => !hasPrice(productPrice(product)));
@@ -471,6 +482,9 @@
 
   function setPricingMode(mode, announce = true) {
     pricingMode = mode === "wholesale" ? "wholesale" : "retail";
+    const url = new URL(window.location.href);
+    url.searchParams.set("pricing", pricingMode);
+    history.replaceState(null, "", url.href);
     try {
       localStorage.setItem(pricingModeStorageKey, pricingMode);
     } catch {
