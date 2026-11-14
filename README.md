@@ -32,10 +32,14 @@ Use an HTTP preview or your published site when checking shared links. Opening `
 
 The sun/moon button in the header switches between light and dark mode. The first visit follows the device preference; a manual choice is saved in browser storage. If storage is blocked, the switch still works for the current visit. `theme.js` applies the theme before the page paints and requires no server or dependencies.
 
+## Mobile zoom
+
+Touch-first phones and tablets keep a fixed page scale. `mobile-zoom.js` applies the mobile viewport setting and prevents pinch gestures; the matching CSS keeps one-finger scrolling and taps available. Desktop and laptop zoom retains its normal behavior. Browser or operating-system accessibility settings may override page-level zoom restrictions.
+
 ## Publish as static files
 
 Upload everything in this folder to a repository. A static host should serve `index.html` from the repository root. No build step is required.
 
-Include `theme.js` when publishing the site, alongside `index.html`, `styles.css`, `app.js`, `products.js`, and the assets folder. The HTML uses versioned CSS and JavaScript references to request the updated assets. If Cloudflare still serves an older HTML page after deployment, purge the site's cached HTML and reload.
+Include `theme.js`, `mobile-zoom.js` and `header-scroll.js` when publishing the site, alongside `index.html`, `styles.css`, `app.js`, `products.js`, and the assets folder. The HTML uses versioned CSS and JavaScript references to request the updated assets. If Cloudflare still serves an older HTML page after deployment, purge the site's cached HTML and reload.
 
 This project intentionally has no checkout, customer-data collection, payment processing, database or administrator login. Before choosing GitHub Pages for a business catalogue, review GitHub's current Pages usage limits and terms. The same files can be published on another static host without changes.

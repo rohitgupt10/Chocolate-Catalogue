@@ -39,6 +39,8 @@
 }
 
 * { box-sizing: border-box; }
+html[data-mobile-zoom-locked="true"],
+html[data-mobile-zoom-locked="true"] * { touch-action: pan-x pan-y; }
 body { margin: 0; background: var(--paper); color: var(--ink); }
 img { display: block; max-width: 100%; }
 button, input, select { font: inherit; }
