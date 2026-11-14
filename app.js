@@ -2,6 +2,12 @@
   "use strict";
 
   const products = (window.CATALOG_PRODUCTS || []).filter((product) => product.active !== false);
+  const storeInfo = window.CATALOG_STORE_INFO || {};
+  const collectionList = document.querySelector("#collection-list");
+  const highlights = document.querySelector("#highlights");
+  const highlightsGrid = document.querySelector("#highlights-grid");
+  const cartSubtotal = document.querySelector("#cart-subtotal");
+  const viewButtons = document.querySelectorAll("[data-view]");
   const grid = document.querySelector("#product-grid");
   const categoryList = document.querySelector("#category-list");
   const searchInput = document.querySelector("#search-input");
@@ -60,6 +66,7 @@
   updateControlLabels();
 
   let selectedCategory = "All";
+  let selectedCollection = "all";
   let returnHash = "#catalogue";
   let pricingMode = loadPricingMode();
 
@@ -107,6 +114,83 @@
     return `Minimum ${minimum} packets`;
   }
 
+  function minimumOrderTotal(product) {
+    if (!isWholesale()) return "";
+    const price = productPrice(product);
+    return hasPrice(price)
+      ? `Minimum order: ${formatPrice(price)} × ${minimumQuantity(product)} = ${formatPrice(Number(price) * minimumQuantity(product))}`
+      : "Minimum order total: ask for price";
+  }
+
+  function createMinimumTotal(product) {
+    const total = document.createElement("p");
+    total.className = "minimum-order-total";
+    total.textContent = minimumOrderTotal(product);
+    total.hidden = !isWholesale();
+    return total;
+  }
+
+  function collectionMatches(product, collection) {
+    if (collection === "new") return (storeInfo.newArrivalIds || []).includes(product.id);
+    if (collection === "picks") {
+      return storeInfo.bestSellerIds?.length
+        ? storeInfo.bestSellerIds.includes(product.id)
+        : Boolean(product.featured);
+    }
+    return true;
+  }
+
+  function renderHighlights() {
+    const isNew = selectedCollection === "new";
+    const label = isNew ? "New arrivals" : storeInfo.bestSellerIds?.length ? "Best sellers" : "Shop picks";
+    document.querySelector("#highlights-title").textContent = label;
+    document.querySelector("#highlights-description").textContent = isNew
+      ? "Recently added to our catalogue"
+      : "Explore our featured selection";
+    const items = products
+      .filter((product) => isInStock(product) && collectionMatches(product, isNew ? "new" : "picks"))
+      .sort((a, b) => Number(Boolean(b.image)) - Number(Boolean(a.image)) || Number(hasPrice(productPrice(b))) - Number(hasPrice(productPrice(a))))
+      .slice(0, 4);
+    highlights.hidden = !items.length || selectedCategory !== "All" || Boolean(searchInput.value.trim());
+    highlightsGrid.replaceChildren();
+    items.forEach((product) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "highlight-card";
+      button.setAttribute("aria-label", `View details for ${product.name}`);
+      const copy = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = product.name;
+      const meta = document.createElement("small");
+      meta.textContent = [productWeight(product) || "Size: ask us", formatPrice(productPrice(product))].join(" · ");
+      copy.append(name, meta);
+      button.append(createImage(product, false), copy);
+      button.addEventListener("click", () => selectProduct(product));
+      highlightsGrid.append(button);
+    });
+  }
+
+  function setCatalogueView(view) {
+    const selected = view === "compact" ? "compact" : "cards";
+    document.documentElement.dataset.catalogueView = selected;
+    viewButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.view === selected)));
+    try { localStorage.setItem("nch-mobile-view-v1", selected); } catch { /* Works for this visit. */ }
+  }
+
+  function renderStoreInfo() {
+    const details = document.querySelector("#store-details");
+    [
+      ["Opening hours", storeInfo.openingHours || "Confirm opening hours on WhatsApp"],
+      ["Pickup", "Collect at New Chocolate House, 3 Dhulabari Road, Mechinagar. Confirm your order before collecting."],
+      ["Delivery areas", storeInfo.deliveryAreas || "Ask us about delivery to your address"],
+      ["Delivery charges", storeInfo.deliveryCharge || "Confirm delivery charges before ordering"],
+      ["Payment methods", storeInfo.paymentMethods?.length ? storeInfo.paymentMethods.join(" · ") : "Ask us about payment options"],
+    ].forEach(([label, value]) => details.append(detailItem(label, value)));
+    document.querySelector("#delivery-contact").href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello, I'd like to confirm delivery availability and the charge for my address:")}`;
+    document.querySelector("#cart-order-note").textContent = `Delivery is extra. ${storeInfo.deliveryCharge || "Ask us for the delivery charge."} Availability and final total will be confirmed on WhatsApp.`;
+    collectionList.querySelector('[data-collection="picks"]').textContent = storeInfo.bestSellerIds?.length ? "Best sellers" : "Shop picks";
+  }
+
   function isInStock(product) {
     return product.inStock !== false;
   }
@@ -132,6 +216,7 @@
     if (productWeight(product)) message.splice(3, 0, `Size: ${productWeight(product)}`);
     if (isWholesale()) {
       message.splice(message.length - 1, 0, wholesaleMinimumLabel(product), `Quantity: ${minimumQuantity(product)}`);
+      message.push(minimumOrderTotal(product));
     }
     const imageUrl = productImageUrl(product);
     if (imageUrl) message.push(`Image: ${imageUrl}`);
@@ -266,7 +351,7 @@
     const hasUnknownPrice = entries.some(({ product }) => !hasPrice(productPrice(product)));
     lines.push("", `${hasUnknownPrice ? "Known-item total" : "Estimated total"}: ${formatPrice(total)}`);
     if (hasUnknownPrice) lines.push("Plus items marked Ask for price.");
-    lines.push("Please confirm availability and final total.");
+    lines.push("Delivery charge is extra. Please confirm availability, delivery charge and final total.");
     return lines.join("\n");
   }
 
@@ -277,7 +362,11 @@
     const hasUnknownPrice = entries.some(({ product }) => !hasPrice(productPrice(product)));
 
     cartCount.textContent = String(itemCount);
-    cartToggle.setAttribute("aria-label", `Open cart, ${itemCount} item${itemCount === 1 ? "" : "s"}`);
+    const subtotalLabel = hasUnknownPrice
+      ? (entries.some(({ product }) => hasPrice(productPrice(product))) ? `${formatPrice(total)} + ask-price items` : "Ask for price")
+      : formatPrice(total);
+    cartSubtotal.textContent = subtotalLabel;
+    cartToggle.setAttribute("aria-label", `Open cart, ${itemCount} item${itemCount === 1 ? "" : "s"}, subtotal ${subtotalLabel}, delivery extra`);
     cartItems.replaceChildren();
     cartItems.hidden = entries.length === 0;
     cartEmpty.hidden = entries.length !== 0;
@@ -333,7 +422,7 @@
 
     if (entries.length) {
       cartItemTotal.textContent = String(itemCount);
-      cartPriceTotal.textContent = `${formatPrice(total)}${hasUnknownPrice ? " + ask-price items" : ""}`;
+      cartPriceTotal.textContent = subtotalLabel;
       cartWhatsapp.textContent = isWholesale() ? "Order wholesale cart on WhatsApp" : "Order cart on WhatsApp";
       cartWhatsapp.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(cartOrderMessage(entries))}`;
     } else {
@@ -396,7 +485,7 @@
     const visible = products.filter((product) => {
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
       const searchable = `${product.name} ${product.brand} ${product.category} ${product.type} ${product.origin}`.toLowerCase();
-      return matchesCategory && (!query || searchable.includes(query));
+      return matchesCategory && collectionMatches(product, selectedCollection) && (!query || searchable.includes(query));
     });
 
     return visible.sort((a, b) => {
@@ -424,10 +513,12 @@
     grid.replaceChildren();
     productCount.textContent = `${visible.length} product${visible.length === 1 ? "" : "s"}`;
     emptyState.hidden = visible.length !== 0;
+    renderHighlights();
 
     visible.forEach((product) => {
       const card = document.createElement("article");
       card.className = "product-card";
+      card.dataset.productId = product.id;
       const button = document.createElement("button");
       button.className = "product-preview";
       button.type = "button";
@@ -440,8 +531,7 @@
       name.textContent = product.name;
       const modeMeta = document.createElement("p");
       modeMeta.className = "product-mode-meta";
-      modeMeta.textContent = [productWeight(product), wholesaleMinimumLabel(product)].filter(Boolean).join(" · ");
-      modeMeta.hidden = !isWholesale();
+      modeMeta.textContent = [productWeight(product) || "Pack size: ask us", wholesaleMinimumLabel(product)].filter(Boolean).join(" · ");
       const bottom = document.createElement("div");
       bottom.className = "product-bottom";
       const price = document.createElement("span");
@@ -457,7 +547,7 @@
       info.append(name, modeMeta);
       button.append(info);
       button.addEventListener("click", () => selectProduct(product));
-      card.append(button, bottom);
+      card.append(button, bottom, createMinimumTotal(product));
       grid.append(card);
     });
   }
@@ -549,7 +639,7 @@
     actions.className = "dialog-actions";
     actions.append(createAddToCartButton(product));
     if (isInStock(product)) actions.append(createOrderLink(product));
-    copy.append(eyebrow, title, description, price, details, actions, orderNote);
+    copy.append(eyebrow, title, description, price, createMinimumTotal(product), details, actions, orderNote);
     layout.append(copy);
     dialogContent.append(layout);
     if (!dialog.open) dialog.showModal();
@@ -560,9 +650,19 @@
   sortSelect.addEventListener("change", renderProducts);
   retailTab.addEventListener("click", () => setPricingMode("retail"));
   wholesaleTab.addEventListener("click", () => setPricingMode("wholesale"));
+  collectionList.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedCollection = button.dataset.collection;
+      collectionList.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      renderProducts();
+    });
+  });
+  viewButtons.forEach((button) => button.addEventListener("click", () => setCatalogueView(button.dataset.view)));
   clearFilters.addEventListener("click", () => {
     searchInput.value = "";
     selectedCategory = "All";
+    selectedCollection = "all";
+    collectionList.querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.collection === "all")));
     categoryList.replaceChildren();
     renderCategories();
     renderProducts();
@@ -594,6 +694,10 @@
   window.addEventListener("hashchange", syncProductFromHash);
 
   document.querySelector("#current-year").textContent = new Date().getFullYear();
+  let savedView = "cards";
+  try { savedView = localStorage.getItem("nch-mobile-view-v1") || "cards"; } catch { /* Default to cards. */ }
+  setCatalogueView(savedView);
+  renderStoreInfo();
   renderCategories();
   setPricingMode(pricingMode, false);
   syncProductFromHash();

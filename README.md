@@ -32,6 +32,14 @@ Use an HTTP preview or your published site when checking shared links. Opening `
 
 The sun/moon button in the header switches between light and dark mode. The first visit follows the device preference; a manual choice is saved in browser storage. If storage is blocked, the switch still works for the current visit. `theme.js` applies the theme before the page paints and requires no server or dependencies.
 
+## Shopping views and shop details
+
+Product cards show available pack sizes in retail and wholesale mode; missing sizes are marked “Pack size: ask us”. Wholesale cards and details show the minimum order calculation. The floating cart displays the current subtotal; delivery is extra and unpriced products remain explicitly marked for a price enquiry.
+
+On phones, customers can switch between Cards and Compact list. This preference is saved locally and does not change the desktop grid. Collection filters work together with search, category and sorting. Shop picks use existing `featured` products; add confirmed product IDs to `bestSellerIds` in `store-info.js` to label them Best sellers. `newArrivalIds` controls the New arrivals collection; update it as products are added. Highlights exclude out-of-stock products; the catalogue keeps their stock status visible.
+
+Edit opening hours, delivery areas, delivery charges and payment methods in `store-info.js`. Current confirmed details: 8 AM–8 PM, delivery across Nepal mainly to cities, Rs. 180–200 per kg, and Fonepay, Nepal Pay or cash. Customers confirm address availability and the final delivery charge on WhatsApp. Delivery is not automatically added to cart totals because shipping weight and the exact charge need confirmation. No payment is collected on the website. Include `store-info.js` when publishing.
+
 ## Mobile zoom
 
 Touch-first phones and tablets keep a fixed page scale. `mobile-zoom.js` applies the mobile viewport setting and prevents pinch gestures; the matching CSS keeps one-finger scrolling and taps available. Desktop and laptop zoom retains its normal behavior. Browser or operating-system accessibility settings may override page-level zoom restrictions.

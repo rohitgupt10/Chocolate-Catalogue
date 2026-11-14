@@ -9,9 +9,10 @@
     <title>New Chocolate House | Product Catalogue</title>
     <link rel="icon" type="image/png" href="assets/logo.png?v=since-2011-2" />
     <script src="theme.js?v=1"></script>
-    <link rel="stylesheet" href="styles.css?v=mobile-zoom-6" />
+    <link rel="stylesheet" href="styles.css?v=shopping-7" />
     <script src="products.js?v=pack-sizes-12" defer></script>
-    <script src="app.js?v=pricing-links-8" defer></script>
+    <script src="store-info.js?v=1" defer></script>
+    <script src="app.js?v=shopping-9" defer></script>
     <script src="header-scroll.js?v=1" defer></script>
   </head>
   <body>
@@ -22,6 +23,7 @@
       </a>
       <nav aria-label="Main navigation">
         <a href="#catalogue">Catalogue</a>
+        <a href="#delivery">Pickup & delivery</a>
         <a class="visit-nav-link" href="#visit">Visit us</a>
         <div class="pricing-switch" role="group" aria-label="Customer pricing">
           <button class="pricing-tab" id="retail-tab" type="button" aria-pressed="true">Retail</button>
@@ -53,6 +55,16 @@
           <strong>Wholesale pricing:</strong> Minimum 10 packets per product or 1 kg for dry fruits. Products with a different minimum show it below the price.
         </p>
 
+        <div class="collection-list" id="collection-list" role="group" aria-label="Product collections">
+          <button type="button" data-collection="all" aria-pressed="true">All products</button>
+          <button type="button" data-collection="picks" aria-pressed="false">Shop picks</button>
+          <button type="button" data-collection="new" aria-pressed="false">New arrivals</button>
+        </div>
+        <section class="highlights" id="highlights" aria-labelledby="highlights-title">
+          <div class="highlights-heading"><h3 id="highlights-title">Shop picks</h3><p id="highlights-description">A few favourites from our catalogue</p></div>
+          <div class="highlights-grid" id="highlights-grid"></div>
+        </section>
+
         <div class="catalogue-tools">
           <label class="search-box">
             <span class="sr-only">Search products</span>
@@ -67,6 +79,11 @@
           </select>
         </div>
 
+        <div class="view-controls" role="group" aria-label="Mobile catalogue layout">
+          <span>View</span>
+          <button type="button" data-view="cards" aria-pressed="true">Cards</button>
+          <button type="button" data-view="compact" aria-pressed="false">Compact list</button>
+        </div>
         <div class="category-list" id="category-list" aria-label="Product categories"></div>
         <div class="product-grid" id="product-grid"></div>
         <div class="empty-state" id="empty-state" hidden>
@@ -76,6 +93,13 @@
         </div>
       </section>
 
+      <section class="delivery" id="delivery" aria-labelledby="delivery-title">
+        <p class="eyebrow">Before you order</p>
+        <h2 id="delivery-title">Pickup & delivery</h2>
+        <dl class="store-details" id="store-details"></dl>
+        <a class="order-link delivery-contact" id="delivery-contact" target="_blank" rel="noopener noreferrer">Confirm delivery on WhatsApp</a>
+      </section>
+
       <section class="visit" id="visit" aria-labelledby="visit-title">
         <div class="visit-details">
           <div>
@@ -83,6 +107,7 @@
             <h2 id="visit-title">New Chocolate House</h2>
             <p>3 Dhulabari Road, Mechinagar 57207</p>
             <p><a href="tel:+9779807945780">+977 980-7945780</a></p>
+            <p><a href="#delivery">Opening hours, delivery & payment details</a></p>
             <div class="social-links" role="group" aria-label="Follow New Chocolate House">
               <a href="https://www.facebook.com/profile.php?id=61594795388598" target="_blank" rel="noopener noreferrer">Facebook<span class="sr-only"> (opens in a new tab)</span></a>
               <a href="https://www.instagram.com/newchocolatehouse7/" target="_blank" rel="noopener noreferrer">Instagram<span class="sr-only"> (opens in a new tab)</span></a>
@@ -106,7 +131,7 @@
 
     <button class="cart-toggle" id="cart-toggle" type="button" aria-controls="cart-dialog" aria-label="Open cart, 0 items">
       <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Zm3 0V6a3 3 0 0 1 6 0v2" /></svg>
-      <span>Cart</span>
+      <span class="cart-toggle-copy"><span>Cart</span><small id="cart-subtotal">Rs. 0</small></span>
       <strong id="cart-count" aria-hidden="true">0</strong>
     </button>
 
@@ -138,7 +163,7 @@
           <div><span>Estimated total</span><strong id="cart-price-total">Rs. 0</strong></div>
           <a class="cart-whatsapp" id="cart-whatsapp" target="_blank" rel="noopener noreferrer">Order cart on WhatsApp</a>
           <button class="cart-clear" id="cart-clear" type="button">Clear cart</button>
-          <p>Availability and final total will be confirmed on WhatsApp.</p>
+          <p id="cart-order-note">Delivery is extra. Availability and final total will be confirmed on WhatsApp.</p>
         </div>
       </div>
     </dialog>
