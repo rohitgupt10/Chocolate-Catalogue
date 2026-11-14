@@ -498,7 +498,7 @@ window.CATALOG_PRODUCTS = [
   },
   {
     id: 37,
-    name: "Runniu Milk Candy",
+    name: "Runiu Milk Candy Small",
     brand: "Runniu",
     category: "Candy",
     origin: "China",
