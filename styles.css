@@ -321,6 +321,11 @@ footer a { font-weight: 800; }
   .store-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
+  .site-header nav { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.4rem; }
+  .site-header nav > a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0.5rem; border: 1px solid var(--line); background: var(--card); font-size: 0.8rem; white-space: nowrap; }
+  .site-header nav > .pricing-switch { grid-column: 1 / 3; justify-self: end; }
+  .site-header nav > .theme-toggle { grid-column: 3; justify-self: end; width: 2.5rem; height: 2.5rem; }
+  .catalogue, .delivery, .visit { scroll-margin-top: 11rem; }
   .collection-list { gap: 0.4rem; }
   .collection-list button { flex: 1 1 auto; padding-inline: 0.65rem; font-size: 0.78rem; }
   .highlights { padding: 0.75rem; }
