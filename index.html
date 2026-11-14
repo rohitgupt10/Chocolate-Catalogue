@@ -9,10 +9,11 @@
     <title>New Chocolate House | Product Catalogue</title>
     <link rel="icon" type="image/png" href="assets/logo.png?v=since-2011-2" />
     <script src="theme.js?v=1"></script>
-    <link rel="stylesheet" href="styles.css?v=mobile-navigation-8" />
-    <script src="products.js?v=runiu-name-16" defer></script>
+    <link rel="stylesheet" href="styles.css?v=wholesale-access-9" />
+    <script src="products.js?v=retail-public-17" defer></script>
     <script src="store-info.js?v=1" defer></script>
-    <script src="app.js?v=shopping-9" defer></script>
+    <script src="wholesale-access.js?v=1" defer></script>
+    <script src="app.js?v=wholesale-access-10" defer></script>
     <script src="header-scroll.js?v=1" defer></script>
   </head>
   <body>
@@ -27,7 +28,7 @@
         <a class="visit-nav-link" href="#visit">Visit us</a>
         <div class="pricing-switch" role="group" aria-label="Customer pricing">
           <button class="pricing-tab" id="retail-tab" type="button" aria-pressed="true">Retail</button>
-          <button class="pricing-tab" id="wholesale-tab" type="button" aria-pressed="false">Wholesale</button>
+          <button class="pricing-tab" id="wholesale-tab" type="button" aria-pressed="false" aria-haspopup="dialog" aria-controls="wholesale-access-dialog">Wholesale</button>
         </div>
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" hidden>
           <svg class="theme-moon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z" /></svg>
@@ -54,6 +55,11 @@
         <p class="wholesale-notice" id="wholesale-notice" hidden>
           <strong>Wholesale pricing:</strong> Minimum 10 packets per product or 1 kg for dry fruits. Products with a different minimum show it below the price.
         </p>
+
+        <div class="wholesale-account" id="wholesale-account" hidden>
+          <span id="wholesale-business-name"></span>
+          <button id="wholesale-lock" type="button">Lock wholesale prices</button>
+        </div>
 
         <div class="collection-list" id="collection-list" role="group" aria-label="Product collections">
           <button type="button" data-collection="all" aria-pressed="true">All products</button>
@@ -142,6 +148,25 @@
     <dialog class="product-dialog" id="product-dialog" aria-labelledby="product-dialog-title">
       <button class="dialog-close" id="dialog-close" type="button" aria-label="Close product details">×</button>
       <div id="dialog-content"></div>
+    </dialog>
+
+    <dialog class="wholesale-access-dialog" id="wholesale-access-dialog" aria-labelledby="wholesale-access-title" aria-describedby="wholesale-access-description">
+      <button class="dialog-close" id="wholesale-access-close" type="button" aria-label="Close wholesale access">×</button>
+      <p class="eyebrow">For shop owners</p>
+      <h2 id="wholesale-access-title">Wholesale access</h2>
+      <p id="wholesale-access-description">Enter your shop details to view wholesale prices. Retail prices are available to everyone.</p>
+      <form id="wholesale-access-form">
+        <label for="wholesale-shop-name">Shop name</label>
+        <input id="wholesale-shop-name" name="shopName" type="text" autocomplete="organization" minlength="2" maxlength="160" required />
+        <label for="wholesale-pan">Shop PAN/VAT number</label>
+        <input id="wholesale-pan" name="pan" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9०-९]{9}" maxlength="9" aria-describedby="wholesale-pan-hint" required />
+        <p class="access-hint" id="wholesale-pan-hint">Your shop’s 9-digit Nepal PAN/VAT number.</p>
+        <label class="access-confirm"><input name="confirmed" type="checkbox" required /><span>I represent this shop and confirm these details are correct.</span></label>
+        <p class="access-error" id="wholesale-access-error" role="alert" hidden></p>
+        <button class="add-cart-button" id="wholesale-access-submit" type="submit">View wholesale prices</button>
+        <a class="order-link" id="wholesale-request-whatsapp" href="https://wa.me/9779769805573" target="_blank" rel="noopener noreferrer">Request prices on WhatsApp</a>
+        <p class="access-hint access-privacy">Your details are used to request wholesale access. This form does not verify registration with IRD. Access lasts for this browser session, up to 8 hours.</p>
+      </form>
     </dialog>
 
     <dialog class="cart-dialog" id="cart-dialog" aria-labelledby="cart-title">

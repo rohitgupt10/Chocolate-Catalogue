@@ -1,2 +1,5 @@
 # Local image-processing libraries and previews.
 .codex-tmp/
+# Confidential wholesale data and separately hosted service checkout.
+.private/
+wholesale-service/

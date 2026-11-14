@@ -2,6 +2,7 @@
   "use strict";
 
   const products = (window.CATALOG_PRODUCTS || []).filter((product) => product.active !== false);
+  const wholesaleAccess = window.NCH_WHOLESALE_ACCESS;
   const storeInfo = window.CATALOG_STORE_INFO || {};
   const collectionList = document.querySelector("#collection-list");
   const highlights = document.querySelector("#highlights");
@@ -68,7 +69,8 @@
   let selectedCategory = "All";
   let selectedCollection = "all";
   let returnHash = "#catalogue";
-  let pricingMode = loadPricingMode();
+  const requestedPricingMode = loadPricingMode();
+  let pricingMode = "retail";
 
   const hasPrice = (price) => price !== null && price !== undefined && price !== "" && Number.isFinite(Number(price));
   const formatPrice = (price) => hasPrice(price) ? `Rs. ${Number(price).toLocaleString("en-IN")}` : "Ask for price";
@@ -93,7 +95,7 @@
   }
 
   function productPrice(product) {
-    return isWholesale() ? product.wholesalePrice : product.price;
+    return isWholesale() ? wholesaleAccess?.price(product.id) : product.price;
   }
 
   function productWeight(product) {
@@ -221,6 +223,7 @@
     const imageUrl = productImageUrl(product);
     if (imageUrl) message.push(`Image: ${imageUrl}`);
     message.push(`Product link: ${productLink(product)}`);
+    if (isWholesale() && wholesaleAccess?.shopName()) message.push(`Shop: ${wholesaleAccess.shopName()}`);
     const link = document.createElement("a");
     link.className = "order-link";
     link.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message.join("\n"))}`;
@@ -335,6 +338,7 @@
 
   function cartOrderMessage(entries) {
     const lines = ["Hello,", isWholesale() ? "I'd like to place a wholesale order:" : "I'd like to order:"];
+    if (isWholesale() && wholesaleAccess?.shopName()) lines.push(`Shop: ${wholesaleAccess.shopName()}`);
     entries.forEach(({ product, quantity }, index) => {
       lines.push("", `${index + 1}. Product: ${product.name}`);
       if (productWeight(product)) lines.push(`Size: ${productWeight(product)}`);
@@ -440,6 +444,7 @@
   }
 
   function syncProductFromHash() {
+    if (wholesaleAccess?.isOpen()) return;
     const product = products.find((item) => window.location.hash === `#product-${item.id}`);
     if (product) openProduct(product);
     else if (dialog.open) dialog.close();
@@ -571,6 +576,10 @@
   }
 
   function setPricingMode(mode, announce = true) {
+    if (mode === "wholesale" && !wholesaleAccess?.hasAccess()) {
+      wholesaleAccess?.request();
+      return;
+    }
     pricingMode = mode === "wholesale" ? "wholesale" : "retail";
     const url = new URL(window.location.href);
     url.searchParams.set("pricing", pricingMode);
@@ -584,6 +593,8 @@
     retailTab.setAttribute("aria-pressed", String(!isWholesale()));
     wholesaleTab.setAttribute("aria-pressed", String(isWholesale()));
     wholesaleNotice.hidden = !isWholesale();
+    document.querySelector("#wholesale-account").hidden = !isWholesale();
+    document.querySelector("#wholesale-business-name").textContent = isWholesale() ? `Wholesale access · ${wholesaleAccess.shopName()}` : "";
     document.documentElement.dataset.pricingMode = pricingMode;
     cartWhatsapp.textContent = isWholesale() ? "Order wholesale cart on WhatsApp" : "Order cart on WhatsApp";
     renderProducts();
@@ -650,6 +661,10 @@
   sortSelect.addEventListener("change", renderProducts);
   retailTab.addEventListener("click", () => setPricingMode("retail"));
   wholesaleTab.addEventListener("click", () => setPricingMode("wholesale"));
+  document.querySelector("#wholesale-lock").addEventListener("click", () => wholesaleAccess.lock());
+  window.addEventListener("wholesale-access-granted", () => { setPricingMode("wholesale"); syncProductFromHash(); });
+  window.addEventListener("wholesale-access-ended", () => { setPricingMode("retail", false); showCartToast("Wholesale prices locked. Retail prices shown."); });
+  window.addEventListener("wholesale-access-cancelled", syncProductFromHash);
   collectionList.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       selectedCollection = button.dataset.collection;
@@ -699,6 +714,13 @@
   setCatalogueView(savedView);
   renderStoreInfo();
   renderCategories();
-  setPricingMode(pricingMode, false);
-  syncProductFromHash();
+  setPricingMode("retail", false);
+  if (requestedPricingMode !== "wholesale") syncProductFromHash();
+  (async () => {
+    const restored = wholesaleAccess ? await wholesaleAccess.restore() : false;
+    if (requestedPricingMode === "wholesale") {
+      if (restored) { setPricingMode("wholesale", false); syncProductFromHash(); }
+      else wholesaleAccess?.request();
+    }
+  })();
 })();
