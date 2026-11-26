@@ -96,7 +96,7 @@ window.CATALOG_PRODUCTS = [
     type: "Shelled nuts",
     badge: "",
     color: "#a16b3c",
-    image: "assets/products/walnuts-transparent.webp",
+    image: "assets/products/Walnut whole.webp",
     featured: false,
     active: true,
   },
