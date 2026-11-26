@@ -6,5 +6,5 @@ window.CATALOG_STORE_INFO = {
   paymentMethods: ["Fonepay", "Nepal Pay", "Cash"],
   // Add confirmed best sellers here; otherwise existing featured items are Shop picks.
   bestSellerIds: [],
-  newArrivalIds: [62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
+  newArrivalIds: [74, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
 };
